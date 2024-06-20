@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chatbot Matematika</title>
+    <style>
+        /* CSS untuk styling sederhana */
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background-color: #232323; /* Warna latar belakang hitam */
+            color: #ffffff; /* Warna teks putih */
+            margin: 0;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .header h1 {
+            color: #007bff;
+            font-size: 24px;
+            position: relative;
+            margin: 0;
+        }
+
+        .header h1 span {
+            font-size: 16px;
+            position: absolute;
+            left: 0;
+            bottom: -18px;
+            color: rgba(255, 255, 255, 0.5); /* Warna teks abu-abu muda */
+        }
+
+        .note {
+            background-color: #333333; /* Warna latar belakang abu-abu tua */
+            padding: 10px;
+            border-left: 3px solid #007bff;
+            margin-bottom: 10px;
+            border-radius: 5px;
+            font-size: 14px;
+            color: #ffffff; /* Warna teks putih */
+        }
+
+        .chat-container {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            max-width: 400px;
+            margin: 0 auto;
+            border: 1px solid #666666; /* Warna border abu-abu sedang */
+            padding: 10px;
+            border-radius: 5px;
+            position: relative; /* Menjadikan posisi relatif untuk konten watermark */
+            background-color: #444444; /* Warna latar belakang abu-abu sedang */
+            overflow: hidden; /* Menghindari tampilan horisontal scrollbar */
+        }
+
+        .watermark {
+            position: absolute;
+            top: 0;
+            left: 0;
+            background-color: rgba(0, 0, 0, 0.1); /* Warna latar belakang transparan */
+            padding: 5px 10px;
+            border-top-left-radius: 5px;
+            border-top-right-radius: 5px;
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.5); /* Warna teks abu-abu muda */
+        }
+
+        .chat-box {
+            height: 300px;
+            width: 100%;
+            overflow-y: scroll;
+            border: 1px solid #555555; /* Warna border abu-abu sedang */
+            padding: 10px;
+            margin-bottom: 10px;
+            text-align: left;
+            background-color: #555555; /* Warna latar belakang abu-abu sedang */
+            border-radius: 5px;
+        }
+
+        .chat-box p {
+            margin: 5px 0;
+        }
+
+        .input-container {
+            display: flex;
+            width: 100%;
+            margin-top: 10px;
+        }
+
+        .input-container input {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid #666666; /* Warna border abu-abu sedang */
+            border-radius: 3px;
+            margin-right: 10px;
+            font-size: 16px;
+            background-color: #333333; /* Warna latar belakang abu-abu tua */
+            color: #ffffff; /* Warna teks putih */
+        }
+
+        .input-container button {
+            padding: 10px 20px;
+            border: none;
+            background-color: #007bff;
+            color: white;
+            cursor: pointer;
+            border-radius: 3px;
+            font-size: 16px;
+        }
+
+        /* Animasi loading */
+        @keyframes loading {
+            0% {
+                content: '';
+            }
+            33% {
+                content: '.';
+            }
+            66% {
+                content: '..';
+            }
+            100% {
+                content: '...';
+            }
+        }
+
+        .loading::after {
+            content: '';
+            animation: loading 1s infinite;
+            color: #ffffff; /* Warna teks putih */
+        }
+    </style>
+</head>
+
+<body>
+    <div class="header">
+        <h1>ChatMTK<span> by RestimAi</span></h1>
+    </div>
+
+    <div class="note">
+        <p><strong>Mohon baca sebentar!</strong></p>
+        <p>Selamat datang di ChatMTK!, Ai ini dirancang untuk membantu Anda menjawab soal matematika sederhana.</p>
+        <p><strong>Cara menggunakan:</strong></p>
+        <ul>
+            <li>Masukkan soal matematika langsung, contoh: <em>14 * 3</em> atau <em>14+5</em>.</li>
+            <li>Atau tanyakan dalam kalimat, contoh: <em>Berapa jumlah 1+1?</em>.</li>
+        </ul>
+        <p>Operasi yang didukung: penjumlahan (+), pengurangan (-), perkalian (*), dan pembagian (/).</p>
+        <p><strong>Contoh pertanyaan:</strong></p>
+        <ul>
+            <li><em>14 * 3</em></li>
+            <li><em>15 / 3</em></li>
+            <li><em>Berapa hasil dari 5+7?</em></li>
+        </ul>
+        
+        <p>Ai ini sederhana, jadi mohon maklum jika ada keterbatasan. 😊</p>
+    </div>
+
+    <div class="chat-container">
+        <div class="watermark">RestimAi</div> <!-- Watermark RestimAi -->
+        <div class="chat-box" id="chat-box">
+            <!-- Konten chatbox -->
+            <p>Bot: Ada yang bisa saya bantu? 😊</p> <!-- Pesan selamat datang -->
+        </div>
+        <div class="input-container">
+            <input type="text" id="user-input" placeholder="Masukkan pertanyaan matematika atau katakan halo...">
+            <button onclick="askQuestion()">Tanya</button>
+        </div>
+    </div>
+
+    <script>
+        function askQuestion() {
+            var userInput = document.getElementById('user-input').value.trim();
+            
+            // Cek apakah input pengguna adalah sebuah pertanyaan matematika
+            if (isMathQuestion(userInput)) {
+                var answer = processQuestion(userInput);
+                displayAnswer(answer, userInput);
+            } else {
+                var botResponse = getBotResponse(userInput);
+                displayBotResponse(botResponse, userInput);
+            }
+
+            // Hapus nilai input setelah tombol "Tanya" diklik
+            document.getElementById('user-input').value = '';
+        }
+
+        function isMathQuestion(input) {
+            // Menghilangkan kata-kata non-matematika untuk menangani pertanyaan dalam bentuk kalimat
+            var cleanedInput = input.replace(/berapa|hasil|jumlah|dari|tambah|kali|bagi|kurang|sama dengan|=| /gi, "");
+            // Cek apakah input mengandung operator matematika untuk menentukan apakah pertanyaan matematika
+            return /[\+\-\*\/]/.test(cleanedInput);
+        }
+
+        function processQuestion(question) {
+            // Menghilangkan kata-kata non-matematika untuk menangani pertanyaan dalam bentuk kalimat
+            var cleanedQuestion = question.replace(/berapa|hasil|dari|jumlah|tambah|kali|bagi|kurang|sama dengan|=| /gi, "");
+            try {
+                var calculatedAnswer = eval(cleanedQuestion);
+                
+                if (isNaN(calculatedAnswer)) {
+                    return `Maaf, saya tidak bisa menghitung hasil dari "${question}". Harap masukkan pertanyaan matematika yang valid.`;
+                } else {
+                    return `Hasil dari ${cleanedQuestion} adalah ${calculatedAnswer}. Jika ada pertanyaan lain, silakan bertanya!`;
+                }
+            } catch (error) {
+                return "Error: Masukan tidak valid. Harap berikan pertanyaan matematika yang valid.";
+            }
+        }
+
+        function getBotResponse(input) {
+            // Daftar respons bot berdasarkan kata kunci (tanpa memperdulikan huruf kapital)
+            var responses = {
+                "halo": "Halo! Ada yang bisa saya bantu?",
+                "oy": "Oyy! Ada yang bisa saya bantu?",
+                "oke": "Oke aman brother! Ada yang bisa saya bantu?",
+                "hai": "Hai senang bertemu denganmu! Ada yang bisa saya bantu?",
+                "hi": "Hi sahabat, senang bertemu denganmu! Ada yang bisa saya bantu?",
+                "kamu siapa": "Aku adalah bot sederhana yang dibuat oleh seseorang yang bernama Restu Imam! Ada yang bisa saya bantu?",
+                "kamu tinggal dimana": "Aku tinggal di dalam komputer dan akan di dalam komputer selamanya! Ada yang bisa saya bantu?",
+                "tes": "Tes tes tes, adakah pacar saya disini hehe! Ada yang bisa saya bantu?",
+                "": "Maaf, saya tidak mengerti pertanyaannya. Silakan masukkan pertanyaan matematika atau katakan halo untuk berkomunikasi dengan saya."
+            };
+
+            // Mengubah input menjadi lowercase untuk pencocokan yang lebih baik
+            var lowercaseInput = input.toLowerCase();
+
+            // Mencari respons berdasarkan kata kunci yang cocok
+            for (var key in responses) {
+                if (lowercaseInput.includes(key)) {
+                    return responses[key];
+                }
+            }
+
+            // Jika tidak ada respons yang cocok, kembalikan respons default
+            return responses[""];
+        }
+
+        function displayAnswer(answer, originalQuestion) {
+            var chatBox = document.getElementById('chat-box');
+            var userQuestionPara = document.createElement('p');
+            userQuestionPara.textContent = 'Anda: ' + originalQuestion;
+            var botAnswerPara = document.createElement('p');
+            botAnswerPara.className = 'loading';
+            botAnswerPara.textContent = 'Bot sedang mengetik';
+            chatBox.appendChild(userQuestionPara);
+            chatBox.appendChild(botAnswerPara);
+            // Hapus input setelah menampilkan jawaban
+            document.getElementById('user-input').value = '';
+            // Gulir ke bawah kotak chat
+            chatBox.scrollTop = chatBox.scrollHeight;
+
+            // Tambahkan delay sebelum menampilkan respons bot yang sebenarnya
+            setTimeout(function() {
+                botAnswerPara.textContent = 'Bot: ' + answer;
+                botAnswerPara.classList.remove('loading');
+            }, 2000); // Delay 2 detik
+        }
+
+        function displayBotResponse(response, originalQuestion) {
+            var chatBox = document.getElementById('chat-box');
+            var userQuestionPara = document.createElement('p');
+            userQuestionPara.textContent = 'Anda: ' + originalQuestion;
+            var botResponsePara = document.createElement('p');
+            botResponsePara.className = 'loading';
+            botResponsePara.textContent = 'Bot sedang mengetik';
+            chatBox.appendChild(userQuestionPara);
+            chatBox.appendChild(botResponsePara);
+            // Hapus input setelah menampilkan respons bot
+            document.getElementById('user-input').value = '';
+            // Gulir ke bawah kotak chat
+            chatBox.scrollTop = chatBox.scrollHeight;
+
+            // Tambahkan delay sebelum menampilkan respons bot yang sebenarnya
+            setTimeout(function() {
+                botResponsePara.textContent = 'Bot: ' + response;
+                botResponsePara.classList.remove('loading');
+            }, 2000); // Delay 2 detik
+        }
+
+        // Menambahkan event listener untuk tombol "Enter" di input field
+        document.getElementById("user-input").addEventListener("keyup", function(event) {
+            if (event.key === "Enter") {
+                askQuestion();
+            }
+        });
+    </script>
+</body>
+
+</html>
